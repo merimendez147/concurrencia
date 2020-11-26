@@ -14,11 +14,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Comedor {
-	private Semaphore semGato;// turno del gato
-	private Semaphore semPerro; // turno del perro
-	private Semaphore mutexCantPlatosOcupados = new Semaphore(1); //exclusion mutua
-        private Semaphore mutexCantGatosEsperando = new Semaphore(1, true);
-        private Semaphore mutexCantPerrosEsperando = new Semaphore(1, true);
+	private final Semaphore semGato;// turno del gato
+	private final Semaphore semPerro; // turno del perro
+	private final Semaphore mutexCantPlatosOcupados = new Semaphore(1); //exclusion mutua
+        private final Semaphore mutexCantGatosEsperando = new Semaphore(1, true);
+        private final Semaphore mutexCantPerrosEsperando = new Semaphore(1, true);
 
 	private final int cantPlatos;
 	private int platosUsados;
