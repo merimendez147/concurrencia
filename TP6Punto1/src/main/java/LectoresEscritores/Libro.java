@@ -41,11 +41,9 @@ public class Libro {
         try {
             cantLectoresEsperando++;
             while (escritorEscribiendo || cantEscritoresEsperando > 0) {
-                cantLectoresEsperando++;
                 lectoresEsperando.await();
             }
             cantLectoresEsperando--;
-            
             cantLectoresLleyendo++;
             System.out.println("El " + nombre + " comenzo a leer");
 
@@ -73,14 +71,11 @@ public class Libro {
     public void empezarEscritura(String nombre) {
         lock.lock();
         try {
+            cantEscritoresEsperando++;
             while (escritorEscribiendo || cantLectoresLleyendo > 0) {
-                cantEscritoresEsperando++;
                 escritoresEsperando.await();
-
             }
-            if (cantEscritoresEsperando > 0) {//si es el primer escritor ingresa sin esperar
-                cantEscritoresEsperando--;
-            }
+            cantEscritoresEsperando--;
             escritorEscribiendo = true;
             cantEscritoresEscribiendo++;
             System.out.println("El " + nombre + " esta escribiendo");
