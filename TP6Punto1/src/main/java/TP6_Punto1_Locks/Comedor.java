@@ -3,12 +3,13 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package TP6_Punto1;
+package TP6_Punto1_Locks;
 
 /**
  *
  * @author maria
  */
+import TP6_Punto1.*;
 import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -62,11 +63,9 @@ public class Comedor {
             if (gatosEsperando > cantPlatos) {
                 System.out.println("Siguen entrando gatos");
                 semGato.release();
-            } else if (perrosEsperando > 0 ){
+            } else {
                 System.out.println("Le toca comer a los perros");
                 semPerro.release(cantPlatos);
-            } else {
-                System.out.println("No hay mas perros esperando");
             }
             mutexCantGatosEsperando.release();
         } catch (InterruptedException ex) {
@@ -80,11 +79,9 @@ public class Comedor {
             if (perrosEsperando > cantPlatos) {
                 System.out.println("Siguen entrando perros");
                 semPerro.release();
-            } else if (gatosEsperando > 0 ){
+            } else {
                 System.out.println("Le toca comer a los gatos");
                 semGato.release(cantPlatos);
-            } else {
-                System.out.println("No hay mas gatos esperando");
             }
             mutexCantPerrosEsperando.release();
         } catch (InterruptedException ex) {
