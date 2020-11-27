@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class Perro implements Runnable {
 
     Comedor comedero;
-    private Random random;
+        Random random = new Random(); 
 
     public Perro(Comedor c) {
         comedero = c;

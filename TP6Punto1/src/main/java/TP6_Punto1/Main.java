@@ -11,7 +11,7 @@ package TP6_Punto1;
  */
 public class Main {
 public static void main(String[] args) {
-    	Comedor comedero = new Comedor(5);
+    	Comedor comedero = new Comedor(4);
         Thread[] gatos = new Thread[10];
         Thread[] perros = new Thread[10];
         for (int i = 0; i < gatos.length; i++) {

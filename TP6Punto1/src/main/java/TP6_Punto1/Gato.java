@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class Gato implements Runnable {
 
     Comedor comedero;
-    private Random random;
+    private final Random random= new Random(); 
 
     public Gato(Comedor c) {
         comedero = c;
