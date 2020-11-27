@@ -5,7 +5,7 @@
  */
 package TP6_Punto1_Locks;
 
-import TP6_Punto1.*;
+
 
 /**
  *
@@ -18,15 +18,14 @@ public static void main(String[] args) {
         Thread[] perros = new Thread[10];
         for (int i = 0; i < gatos.length; i++) {
             gatos[i] = new Thread(new Gato(comedero));
-            gatos[i].setName("Gato"+i);
+            gatos[i].setName("Gato"+(i+1));
         }
         for (int i = 0; i < perros.length; i++) {
             perros[i] = new Thread(new Perro(comedero));
-            perros[i].setName("Perro"+i);
+            perros[i].setName("Perro"+(i+1));
         }
         for (int i = 0; i < gatos.length; i++) {
             gatos[i].start();
-
         }
         for (int i = 0; i < perros.length; i++) {
             perros[i].start();

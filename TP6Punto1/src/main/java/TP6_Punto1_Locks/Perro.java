@@ -5,7 +5,7 @@
  */
 package TP6_Punto1_Locks;
 
-import TP6_Punto1.*;
+
 import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,7 +35,6 @@ public class Perro implements Runnable {
 
     @Override
     public void run() {
-        comedero.esperarTurnoPerro();
         comedero.entrarPerro();
         comer();
         comedero.salirPerro();

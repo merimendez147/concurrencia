@@ -9,19 +9,19 @@ package TP6_Punto1_Locks;
  *
  * @author maria
  */
-import TP6_Punto1.*;
-import java.util.concurrent.Semaphore;
+
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class Comedor {
 
-    private final Semaphore semGato;// turno del gato
-    private final Semaphore semPerro; // turno del perro
-    private final Semaphore mutexCantPlatosOcupados = new Semaphore(1); //exclusion mutua
-    private final Semaphore mutexCantGatosEsperando = new Semaphore(1, true);
-    private final Semaphore mutexCantPerrosEsperando = new Semaphore(1, true);
-
+    private boolean turnoGato;// turno del gato
+    private boolean turnoPerro; // turno del perro
+    private final ReentrantLock lock;
+    private final Condition gatosEsperandoPlato;
+    private final Condition perrosEsperandoPlato;
     private final int cantPlatos;
     private int platosUsados;
     private int gatosEsperando, perrosEsperando;
@@ -31,121 +31,110 @@ public class Comedor {
         platosUsados = 0;
         gatosEsperando = 0;
         perrosEsperando = 0;
-        semGato = new Semaphore(0, true);
-        semPerro = new Semaphore(cantPlatos, true); //arrancan comiendo los perros
+        lock = new ReentrantLock(true);
+        gatosEsperandoPlato = lock.newCondition();
+        perrosEsperandoPlato = lock.newCondition();
+        turnoGato = false;
+        turnoPerro = true; //arrancan comiendo losf perros
     }
 
-    public void esperarTurnoPerro() {
-        try {
-            mutexCantPerrosEsperando.acquire();
-            perrosEsperando++;
-            mutexCantPerrosEsperando.release();
-            semPerro.acquire();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Comedor.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
-    public void esperarTurnoGato() {
-        try {
-            mutexCantGatosEsperando.acquire();
-            gatosEsperando++;
-            mutexCantGatosEsperando.release();
-            semGato.acquire();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Comedor.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
+   
     private void pasarTurnoPerro() {
+        lock.lock();
         try {
-            mutexCantGatosEsperando.acquire();
             if (gatosEsperando > cantPlatos) {
                 System.out.println("Siguen entrando gatos");
-                semGato.release();
+                gatosEsperandoPlato.signal();
             } else {
                 System.out.println("Le toca comer a los perros");
-                semPerro.release(cantPlatos);
+                turnoPerro = true;
+                turnoGato = false;
+                perrosEsperandoPlato.signalAll();
             }
-            mutexCantGatosEsperando.release();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Comedor.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            lock.unlock();
         }
     }
 
     private void pasarTurnoGato() {
+        lock.lock();
         try {
-            mutexCantPerrosEsperando.acquire();
             if (perrosEsperando > cantPlatos) {
                 System.out.println("Siguen entrando perros");
-                semPerro.release();
+                perrosEsperandoPlato.signal();
             } else {
                 System.out.println("Le toca comer a los gatos");
-                semGato.release(cantPlatos);
+                turnoPerro = false;
+                turnoGato = true;
+                gatosEsperandoPlato.signalAll();
             }
-            mutexCantPerrosEsperando.release();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Comedor.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            lock.unlock();
         }
     }
 
     public void entrarGato() {
+        lock.lock();
         try {
-            mutexCantPlatosOcupados.acquire();
-            if (platosUsados < cantPlatos) {
-                System.out.println("El " + Thread.currentThread().getName() + " esta comiendo");
-                gatosEsperando--;
-                platosUsados++;
-                System.out.println("platos ocupados " + platosUsados);
+            gatosEsperando++;
+            while (platosUsados > cantPlatos || !turnoGato) {
+                gatosEsperandoPlato.await();
             }
-            mutexCantPlatosOcupados.release();
+            System.out.println("El " + Thread.currentThread().getName() + " esta comiendo");
+            gatosEsperando--;
+            platosUsados++;
+            System.out.println("platos ocupados " + platosUsados);
+
         } catch (InterruptedException ex) {
             Logger.getLogger(Comedor.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            lock.unlock();
         }
     }
 
     public void salirGato() {
+        lock.lock();
         try {
-            mutexCantPlatosOcupados.acquire();
             System.out.println("El " + Thread.currentThread().getName() + " dejo de comer");
             platosUsados--;
             System.out.println("platos ocupados " + platosUsados);
             if (platosUsados == 0) {
                 pasarTurnoPerro();
             }
-            mutexCantPlatosOcupados.release();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Comedor.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            lock.unlock();
         }
     }
 
     public void salirPerro() {
+        lock.lock();
         try {
-            mutexCantPlatosOcupados.acquire();
             System.out.println("El " + Thread.currentThread().getName() + " dejo de comer");
             platosUsados--;
             System.out.println("platos ocupados " + platosUsados);
             if (platosUsados == 0) {
                 pasarTurnoGato();
             }
-            mutexCantPlatosOcupados.release();
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Comedor.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            lock.unlock();
         }
     }
 
     public void entrarPerro() {
+        lock.lock();
         try {
-            mutexCantPlatosOcupados.acquire();
-            if (platosUsados < cantPlatos) {
-                System.out.println("El " + Thread.currentThread().getName() + " esta comiendo");
-                perrosEsperando--;
-                platosUsados++;
-                System.out.println("platos ocupados " + platosUsados);
+            perrosEsperando++;
+            while (platosUsados > cantPlatos || !turnoPerro) {
+                perrosEsperandoPlato.await();
             }
-            mutexCantPlatosOcupados.release();
+            System.out.println("El " + Thread.currentThread().getName() + " esta comiendo");
+            perrosEsperando--;
+            platosUsados++;
+            System.out.println("platos ocupados " + platosUsados);
         } catch (InterruptedException ex) {
             Logger.getLogger(Comedor.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            lock.unlock();
         }
     }
 }
